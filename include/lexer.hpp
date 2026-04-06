@@ -9,7 +9,7 @@ enum class TokenType { //enum-набор возможных значений,
     Number,
     Identifier,
 
-    Plus, Minus, Start, Slash, Caret,
+    Plus, Minus, Star, Slash, Caret,
     LParen, RParen,
 
     End
