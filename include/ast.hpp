@@ -12,7 +12,7 @@ enum class UnaryOpType {
 
 enum class BinaryOpType {
     Add,
-    Substract,
+    Subtract,
     Multiply,
     Divide,
     Power
