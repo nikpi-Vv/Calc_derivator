@@ -101,9 +101,49 @@ NodePtr Differentiator::differentiate(const Node& node, const std::string& varia
             }
 
             case BinaryOpType::Power: {
-                // Общая формула:
-                // (u^v)' = u^v * (v' * log(u) + v * u'/u)
+                const auto* exponentNumber = dynamic_cast<const NumberNode*>(binary->right());
+                const auto* baseNumber = dynamic_cast<const NumberNode*>(binary->left());
 
+                if (exponentNumber != nullptr) {
+                    // (u^c)' = c * u^(c-1) * u'
+                    double c = std::stod(exponentNumber->value());
+
+                    NodePtr newExponent = makeNumber(std::to_string(c - 1.0));
+                    NodePtr powerPart = makeBinary(
+                        BinaryOpType::Power,
+                        clone(*binary->left()),
+                        std::move(newExponent)
+                    );
+
+                    return makeBinary(
+                        BinaryOpType::Multiply,
+                        makeBinary(
+                            BinaryOpType::Multiply,
+                            makeNumber(exponentNumber->value()),
+                            std::move(powerPart)
+                        ),
+                        differentiate(*binary->left(), variable)
+                    );
+                }
+
+                if (baseNumber != nullptr) {
+                    // (a^v)' = a^v * log(a) * v'
+                    return makeBinary(
+                        BinaryOpType::Multiply,
+                        makeBinary(
+                            BinaryOpType::Multiply,
+                            makeBinary(
+                                BinaryOpType::Power,
+                                clone(*binary->left()),
+                                clone(*binary->right())
+                            ),
+                            makeFunction("log", clone(*binary->left()))
+                        ),
+                        differentiate(*binary->right(), variable)
+                    );
+                }
+
+                // (u^v)' = u^v * (v' * log(u) + v * u'/u)
                 NodePtr uPowV = makeBinary(
                     BinaryOpType::Power,
                     clone(*binary->left()),

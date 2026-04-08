@@ -1,26 +1,50 @@
-SHELL := cmd.exe
-.SHELLFLAGS := /C
+CXX = g++
+CXXFLAGS = -std=c++17 -Wall -Wextra -Iinclude -Iexternal
+BUILD_DIR = build
 
-CXX := g++
-CXXFLAGS := -std=c++17 -Wall -Wextra -Iinclude
+APP = $(BUILD_DIR)/app.exe
+TESTS = $(BUILD_DIR)/tests.exe
 
-SRC := $(wildcard src/*.cpp)
-TARGET := build/app.exe
+APP_SOURCES = \
+	src/main.cpp \
+	src/app.cpp \
+	src/differentiator.cpp \
+	src/evaluator.cpp \
+	src/lexer.cpp \
+	src/parser.cpp \
+	src/printer.cpp \
+	src/simplifier.cpp
 
-.PHONY: all run clean rebuild dirs
+TEST_SOURCES = \
+	tests/test_main.cpp \
+	tests/test_app.cpp \
+	tests/test_contest.cpp \
+	src/app.cpp \
+	src/differentiator.cpp \
+	src/evaluator.cpp \
+	src/lexer.cpp \
+	src/parser.cpp \
+	src/printer.cpp \
+	src/simplifier.cpp
 
-all: dirs $(TARGET)
+.PHONY: all test run clean
 
-dirs:
-	if not exist build mkdir build
+all: $(APP)
 
-$(TARGET): $(SRC)
-	$(CXX) $(CXXFLAGS) $(SRC) -o $(TARGET)
+$(BUILD_DIR):
+	if not exist $(BUILD_DIR) mkdir $(BUILD_DIR)
 
-run: all
-	$(TARGET)
+$(APP): $(APP_SOURCES) | $(BUILD_DIR)
+	$(CXX) $(CXXFLAGS) -o $(APP) $(APP_SOURCES)
+
+$(TESTS): $(TEST_SOURCES) | $(BUILD_DIR)
+	$(CXX) $(CXXFLAGS) -o $(TESTS) $(TEST_SOURCES)
+
+run: $(APP)
+	$(APP)
+
+test: $(TESTS)
+	$(TESTS)
 
 clean:
-	if exist build rmdir /S /Q build
-
-rebuild: clean all
+	if exist $(BUILD_DIR) rmdir /s /q $(BUILD_DIR)

@@ -1,12 +1,12 @@
+#include "app.hpp"
+
 #include <algorithm>
 #include <cctype>
-#include <iostream>
 #include <iomanip>
-#include <limits>
+#include <iostream>
 #include <sstream>
 #include <stdexcept>
 #include <string>
-#include <unordered_map>
 #include <unordered_set>
 #include <vector>
 
@@ -39,7 +39,7 @@ std::vector<std::string> readNames(std::istream& in, int n) {
     while (static_cast<int>(names.size()) < n) {
         std::string line;
         if (!std::getline(in, line)) {
-            throw std::runtime_error("ERROR Not enough variable names");
+            throw std::runtime_error("Not enough variable names");
         }
 
         std::istringstream iss(line);
@@ -47,7 +47,7 @@ std::vector<std::string> readNames(std::istream& in, int n) {
         while (iss >> token) {
             token = toLower(token);
             if (builtInFunctions().count(token) != 0U) {
-                throw std::runtime_error("ERROR Variable name conflicts with built-in function: " + token);
+                throw std::runtime_error("Variable name conflicts with built-in function: " + token);
             }
             names.push_back(token);
             if (static_cast<int>(names.size()) == n) {
@@ -66,7 +66,7 @@ std::vector<double> readValues(std::istream& in, int n) {
     while (static_cast<int>(values.size()) < n) {
         std::string line;
         if (!std::getline(in, line)) {
-            throw std::runtime_error("ERROR Not enough variable values");
+            throw std::runtime_error("Not enough variable values");
         }
 
         std::istringstream iss(line);
@@ -81,41 +81,36 @@ std::vector<double> readValues(std::istream& in, int n) {
 
     return values;
 }
-
-VariableTable readVariables(std::istream& in, int n) {
-    std::vector<std::string> names = readNames(in, n);
-    std::vector<double> values = readValues(in, n);
-
-    VariableTable vars;
-    for (int i = 0; i < n; ++i) {
-        vars[names[i]] = values[i];
-    }
-    return vars;
-}
 }  // namespace
 
-int main() {
+int runApplication(std::istream& in, std::ostream& out) {
     try {
         std::string command;
-        if (!std::getline(std::cin, command)) {
-            throw std::runtime_error("ERROR Empty input");
+        if (!std::getline(in, command)) {
+            throw std::runtime_error("Empty input");
         }
         command = toLower(command);
 
         std::string nLine;
-        if (!std::getline(std::cin, nLine)) {
-            throw std::runtime_error("ERROR Missing variable count");
+        if (!std::getline(in, nLine)) {
+            throw std::runtime_error("Missing variable count");
         }
         int n = std::stoi(nLine);
         if (n < 0) {
-            throw std::runtime_error("ERROR Variable count must be non-negative");
+            throw std::runtime_error("Variable count must be non-negative");
         }
 
-        VariableTable variables = readVariables(std::cin, n);
+        std::vector<std::string> names = readNames(in, n);
+        std::vector<double> values = readValues(in, n);
+
+        VariableTable variables;
+        for (int i = 0; i < n; ++i) {
+            variables[names[i]] = values[i];
+        }
 
         std::string expression;
-        if (!std::getline(std::cin, expression)) {
-            throw std::runtime_error("ERROR Missing expression");
+        if (!std::getline(in, expression)) {
+            throw std::runtime_error("Missing expression");
         }
 
         Lexer lexer(expression);
@@ -126,66 +121,45 @@ int main() {
 
         if (command == "evaluate") {
             Evaluator evaluator;
-            std::cout << std::setprecision(15) << evaluator.evaluate(*tree, variables);
+            out << std::setprecision(15) << evaluator.evaluate(*tree, variables);
             return 0;
         }
 
         if (command == "derivative") {
             if (n == 0) {
-                throw std::runtime_error("ERROR No variable provided for differentiation");
+                throw std::runtime_error("No variable provided for differentiation");
             }
-
-            std::vector<std::string> orderedNames;
-            orderedNames.reserve(variables.size());
-            for (const auto& [name, value] : variables) {
-                (void)value;
-                orderedNames.push_back(name);
-            }
-            std::sort(orderedNames.begin(), orderedNames.end());
 
             Differentiator differentiator;
-            NodePtr derivativeTree = differentiator.differentiate(*tree, orderedNames.front());
+            NodePtr derivativeTree = differentiator.differentiate(*tree, names.front());
 
             Simplifier simplifier;
             NodePtr simplifiedTree = simplifier.simplify(*derivativeTree);
 
             Printer printer;
-            std::cout << printer.print(*simplifiedTree);
+            out << printer.print(*simplifiedTree);
             return 0;
         }
 
         if (command == "evaluate_derivative") {
             if (n == 0) {
-                throw std::runtime_error("ERROR No variable provided for differentiation");
+                throw std::runtime_error("No variable provided for differentiation");
             }
-
-            std::vector<std::string> orderedNames;
-            orderedNames.reserve(variables.size());
-            for (const auto& [name, value] : variables) {
-                (void)value;
-                orderedNames.push_back(name);
-            }
-            std::sort(orderedNames.begin(), orderedNames.end());
 
             Differentiator differentiator;
-            NodePtr derivativeTree = differentiator.differentiate(*tree, orderedNames.front());
+            NodePtr derivativeTree = differentiator.differentiate(*tree, names.front());
 
             Simplifier simplifier;
             NodePtr simplifiedTree = simplifier.simplify(*derivativeTree);
 
             Evaluator evaluator;
-            std::cout << std::setprecision(15) << evaluator.evaluate(*simplifiedTree, variables);
+            out << std::setprecision(15) << evaluator.evaluate(*simplifiedTree, variables);
             return 0;
         }
 
-        throw std::runtime_error("ERROR Unknown command");
+        throw std::runtime_error("Unknown command");
     } catch (const std::exception& e) {
-        std::string message = e.what();
-        if (message.rfind("ERROR", 0) == 0) {
-            std::cout << message;
-        } else {
-            std::cout << "ERROR " << message;
-        }
+        out << "ERROR " << e.what();
         return 0;
     }
 }

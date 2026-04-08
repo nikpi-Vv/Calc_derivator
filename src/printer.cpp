@@ -6,7 +6,7 @@ std::string Printer::print(const Node& node) const {
     return printNode(node, -1, false);
 }
 
-std::string Printer::printNode(const Node& node, int parentPriority, bool isRightChild) const {
+std::string Printer::printNode(const Node& node, int parentPriority, bool /*isRightChild*/) const {
     if (const auto* number = dynamic_cast<const NumberNode*>(&node)) {
         return number->value();
     }
@@ -35,16 +35,31 @@ std::string Printer::printNode(const Node& node, int parentPriority, bool isRigh
         std::string left = printNode(*binary->left(), currentPriority, false);
         std::string right = printNode(*binary->right(), currentPriority, true);
 
+        bool needParensAroundRight = false;
+        if (const auto* rightBinary = dynamic_cast<const BinaryOpNode*>(binary->right())) {
+            int rightPriority = priority(rightBinary->op());
+
+            if (binary->op() == BinaryOpType::Subtract && rightPriority == currentPriority) {
+                needParensAroundRight = true;
+            }
+
+            if (binary->op() == BinaryOpType::Divide && rightPriority == currentPriority) {
+                needParensAroundRight = true;
+            }
+
+            if (binary->op() == BinaryOpType::Power && rightPriority == currentPriority) {
+                needParensAroundRight = true;
+            }
+        }
+
+        if (needParensAroundRight) {
+            right = "(" + right + ")";
+        }
+
         std::string result = left + " " + binaryOpToString(binary->op()) + " " + right;
 
         bool needParens = false;
-
         if (currentPriority < parentPriority) {
-            needParens = true;
-        }
-
-        // Для правой части степени: a^(b^c) не надо ломать
-        if (isRightChild && binary->op() == BinaryOpType::Power && currentPriority == parentPriority) {
             needParens = true;
         }
 
