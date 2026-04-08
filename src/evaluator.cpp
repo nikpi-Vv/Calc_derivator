@@ -50,9 +50,6 @@ double Evaluator::evaluate(const Node& node, const VariableTable& variables) con
             case BinaryOpType::Multiply:
                 return left * right;
             case BinaryOpType::Divide:
-                if (right == 0.0) {
-                    throw EvalError("Division by zero");
-                }
                 return left / right;
             case BinaryOpType::Power: {
                 double value = std::pow(left, right);
@@ -103,10 +100,10 @@ double Evaluator::evaluateFunction(const std::string& name, double arg) const {
         return value;
     }
     if (name == "log") {
-        if (arg <= 0.0) {
+        if (arg < 0.0) {
             throw EvalError("Domain error: log(" + std::to_string(arg) + ")");
         }
-        return std::log(arg);
+        return std::log(arg); // log(0) -> -inf
     }
     if (name == "sqrt") {
         if (arg < 0.0) {

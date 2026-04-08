@@ -9,6 +9,9 @@
 #include <string>
 #include <unordered_set>
 #include <vector>
+#include <cmath>
+#include <limits>
+#include <sstream>
 
 #include "differentiator.hpp"
 #include "evaluator.hpp"
@@ -83,6 +86,19 @@ std::vector<double> readValues(std::istream& in, int n) {
 }
 }  // namespace
 
+std::string formatDouble(double value) {
+    if (std::isnan(value)) {
+        return "nan";
+    }
+    if (std::isinf(value)) {
+        return value < 0 ? "-inf" : "inf";
+    }
+
+    std::ostringstream out;
+    out << std::setprecision(15) << value;
+    return out.str();
+}
+
 int runApplication(std::istream& in, std::ostream& out) {
     try {
         std::string command;
@@ -121,7 +137,8 @@ int runApplication(std::istream& in, std::ostream& out) {
 
         if (command == "evaluate") {
             Evaluator evaluator;
-            out << std::setprecision(15) << evaluator.evaluate(*tree, variables);
+            double value = evaluator.evaluate(*tree, variables);
+            out << formatDouble(value);
             return 0;
         }
 
@@ -153,7 +170,8 @@ int runApplication(std::istream& in, std::ostream& out) {
             NodePtr simplifiedTree = simplifier.simplify(*derivativeTree);
 
             Evaluator evaluator;
-            out << std::setprecision(15) << evaluator.evaluate(*simplifiedTree, variables);
+            double value = evaluator.evaluate(*simplifiedTree, variables);
+            out << formatDouble(value);
             return 0;
         }
 
