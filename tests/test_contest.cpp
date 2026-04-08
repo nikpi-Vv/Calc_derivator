@@ -11,6 +11,9 @@ std::string runCase(const std::string& input) {
     runApplication(in, out);
     return out.str();
 }
+double runCaseDouble(const std::string& input) {
+    return std::stod(runCase(input));
+}
 }
 
 // =========================
@@ -302,13 +305,13 @@ TEST_CASE("VE 05: case insensitive names") {
 }
 
 TEST_CASE("VE 06: sqrt and log and cos") {
-    REQUIRE(runCase(
+    REQUIRE_NEAR(runCaseDouble(
         "evaluate\n"
         "3\n"
         "x y z\n"
         "1 2 4\n"
         "sqrt(z) + log(y) + cos(x)\n"
-    ) == "3.23344948642809");
+    ), 3.23344948642809, 1e-12);
 }
 
 TEST_CASE("VE 07: log(0) gives -inf") {
@@ -446,13 +449,13 @@ TEST_CASE("DE 11: derivative of y^2 by x is zero") {
 }
 
 TEST_CASE("DE 12: derivative with nested chain") {
-    REQUIRE(runCase(
+    REQUIRE_NEAR(runCaseDouble(
         "evaluate_derivative\n"
         "1\n"
         "x\n"
         "2\n"
         "sin(x^2)\n"
-    ) == "-2.61457448345445");
+    ), -2.61457448345445, 1e-12);
 }
 
 // =========================

@@ -19,6 +19,7 @@ TEST_SOURCES = \
 	tests/test_main.cpp \
 	tests/test_app.cpp \
 	tests/test_contest.cpp \
+	tests/test_hard.cpp \
 	src/app.cpp \
 	src/differentiator.cpp \
 	src/evaluator.cpp \

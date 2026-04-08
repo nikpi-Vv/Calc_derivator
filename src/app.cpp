@@ -87,16 +87,37 @@ std::vector<double> readValues(std::istream& in, int n) {
 }  // namespace
 
 std::string formatDouble(double value) {
+
     if (std::isnan(value)) {
         return "nan";
     }
+
     if (std::isinf(value)) {
         return value < 0 ? "-inf" : "inf";
     }
 
     std::ostringstream out;
-    out << std::setprecision(15) << value;
-    return out.str();
+
+    out << std::fixed;
+    out << std::setprecision(15);
+    out << value;
+
+    std::string s = out.str();
+
+    // убрать лишние нули
+    while (!s.empty() && s.back() == '0') {
+        s.pop_back();
+    }
+
+    if (!s.empty() && s.back() == '.') {
+        s.pop_back();
+    }
+
+    if (s.empty()) {
+        s = "0";
+    }
+
+    return s;
 }
 
 int runApplication(std::istream& in, std::ostream& out) {
